@@ -7,14 +7,14 @@ from .models import ScrapedInfo
 @shared_task
 # some heavy stuff here
 def web_scrape(url):
-    print('Creating forex data ..')
+    print('Scraping Site ..')
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     html = urlopen(req).read()
     bs = BeautifulSoup(html, 'html.parser')
     # get first 5 rows
     title = bs.find('title').text
     text = bs.find('div').text
-    images = bs.find_all('img')
+    images = bs.find_all('img').text
     print(title)
 
 

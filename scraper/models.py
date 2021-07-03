@@ -11,8 +11,7 @@ class ScrapedInfo(models.Model):
     text = models.TextField()
 
     class Meta:
-        verbose_name = 'Currency'
-        verbose_name_plural = 'Currencies'
+        verbose_name = 'Scraped Info'
 
     def __str__(self):
-        return self.pair
+        return self.title
