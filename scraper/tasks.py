@@ -13,13 +13,14 @@ def web_scrape(url):
     bs = BeautifulSoup(html, 'html.parser')
     # get first 5 rows
     title = bs.find('title').text
-    text = bs.find('div').text
+    doc = ScrapedInfo.objects.create(title = title)
+    h1 = bs.find('h1').text
     images = bs.find_all('img').text
     print(title)
 
 
     # create objects in database
-    ScrapedInfo.objects.create(title = title, text = text)
+   
         
     # sleep few seconds to avoid database block
     sleep(5)
