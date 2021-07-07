@@ -13,7 +13,7 @@ def web_scrape(url):
     bs = BeautifulSoup(html, 'html.parser')
     # get first 5 rows
     title = bs.find('title').text
-    doc = ScrapedInfo.objects.create(title = title)
+    doc = ScrapedInfo.objects.create(title = title, url=url)
     h1 = bs.find('h1').text
     images = bs.find_all('img').text
     print(title)
@@ -26,3 +26,6 @@ def web_scrape(url):
     sleep(5)
 
 web_scrape('https://theconcordschool.org/')
+
+def Check(bs, title):
+    h1 = bs.find_all('h1')

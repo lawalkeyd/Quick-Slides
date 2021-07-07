@@ -13,7 +13,7 @@ class ScrapedInfo(models.Model):
         return self.title
 
 class ParentInfo(models.Model):
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name='children')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name='children', null=True)
     title = models.CharField(max_length=160)        
 
 class Images(models.Model):
