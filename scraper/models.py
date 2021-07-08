@@ -25,4 +25,5 @@ class Headings(models.Model):
     text = models.CharField(max_length=160)
 
 class Details(models.Model):
-    models.TextField(verbose_name='details')
+    info = models.ForeignKey(ParentInfo, on_delete=models.CASCADE, related_name='details')
+    text = models.TextField(verbose_name='details')
