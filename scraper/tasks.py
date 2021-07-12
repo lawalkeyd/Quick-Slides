@@ -13,10 +13,10 @@ def Check(bs, title, no):
     else:
         image = bs.parent.find('img')
         if image:
-                Images.objects.create(info=parent, images=image.text)
+                Images.objects.create(info=parent, images=image.get_text)
         paragraph = bs.parent.find('p')
         if paragraph:
-            Details.objects.create(info=parent, text=paragraph.text)
+            Details.objects.create(info=parent, text=paragraph.get_text)
 
 @shared_task
 # some heavy stuff here
@@ -36,7 +36,21 @@ def web_scrape(url):
 
     # create objects in database
    
-        
+    prs = Presentation('foo.pptx')
+
+    first_slide = prs.slides[0]
+    title = first_slide.shapes.title
+    subtitle = first_slide.placeholders[1]
+    title.text = 'Title'
+    subtitle.text = "Subtitle"
+
+    response = HttpResponse(content_type='application/vnd.ms-powerpoint')
+    response['Content-Disposition'] = 'attachment; filename="sample.pptx"'
+    prs.save(source_stream)
+    ppt = source_stream.getvalue()
+    source_stream.close()
+    response.write(ppt)
+    return response
     # sleep few seconds to avoid database block
     sleep(5)
 
