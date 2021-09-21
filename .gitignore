@@ -1,3 +1,4 @@
+slides_folder/
 .vscode
 env
 db.sqlite3
