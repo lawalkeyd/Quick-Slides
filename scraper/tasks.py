@@ -3,6 +3,10 @@ from celery import shared_task
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
 from .models import Details, Images, ParentInfo, ScrapedInfo
+from pptx import Presentation
+from django.http import HttpResponse
+from QuickSlides.settings import BASE_DIR
+
 
 def Check(bs, title, no):
     parent = ParentInfo.objects.create(title= title) 
@@ -35,8 +39,9 @@ def web_scrape(url):
 
 
     # create objects in database
+    present_dir = BASE_DIR  / 'slides_folder' 
    
-    prs = Presentation('foo.pptx')
+    prs = Presentation(present_dir / 'Ion.pptx')
 
     first_slide = prs.slides[0]
     title = first_slide.shapes.title
@@ -46,11 +51,11 @@ def web_scrape(url):
 
     response = HttpResponse(content_type='application/vnd.ms-powerpoint')
     response['Content-Disposition'] = 'attachment; filename="sample.pptx"'
-    prs.save(source_stream)
-    ppt = source_stream.getvalue()
-    source_stream.close()
-    response.write(ppt)
-    return response
+    prs.save(present_dir / 'Complete.pptx')
+    # ppt = source_stream.getvalue()
+    # source_stream.close()
+    # response.write(ppt)
+    return 'done'
     # sleep few seconds to avoid database block
     sleep(5)
 
