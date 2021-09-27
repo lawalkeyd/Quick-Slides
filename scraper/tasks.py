@@ -8,19 +8,26 @@ from django.http import HttpResponse
 from QuickSlides.settings import BASE_DIR
 
 
-def Check(bs, title, no):
-    parent = ParentInfo.objects.create(title= title) 
-    head = bs.find_all('h' + str(no))
-    if head or no > 6:
-        for item in head:
-            Check(item, item.text, no + 1)
+def Check(bs, no, parent):
+    tag = "tag"
+    child = "child"
+    text = "text"
+    heads = bs.find_all('h' + str(no))
+    if heads != None or (no > 6):
+        for item in heads:
+            parent[child] = {}
+            parent[tag] = item.text
+            Check(item, parent[child], no + 1)
     else:
-        image = bs.parent.find('img')
-        if image:
-                Images.objects.create(info=parent, images=image.get_text)
-        paragraph = bs.parent.find('p')
+        # image = bs.parent.find('img')
+        # if image:
+        #         Images.objects.create(info=parent, images=image.get_text)
+        paragraph = bs.parent.find_all('p')
         if paragraph:
-            Details.objects.create(info=parent, text=paragraph.get_text)
+            parent[text] = paragraph[0].get_text
+    return parent        
+
+             
 
 @shared_task
 # some heavy stuff here
@@ -30,12 +37,9 @@ def web_scrape(url):
     html = urlopen(req).read()
     bs = BeautifulSoup(html, 'html.parser')
     # get first 5 rows
-    title = bs.find('title').text
-    doc = ScrapedInfo.objects.create(title = title, url=url)
-    h1 = bs.find('h1').text
-    #images = bs.find('img').text
-    print(title)
-    Check(bs, title, 1)
+    parent = {}
+    parent["title"] = bs.find('title').text
+    result = Check(bs, 1, parent)
 
 
     # create objects in database
@@ -43,11 +47,16 @@ def web_scrape(url):
    
     prs = Presentation(present_dir / 'Ion.pptx')
 
-    first_slide = prs.slides[0]
-    title = first_slide.shapes.title
-    subtitle = first_slide.placeholders[1]
-    title.text = 'Title'
-    subtitle.text = "Subtitle"
+    # first_slide = prs.slides[0]
+    # title = first_slide.shapes.title
+    # subtitle = first_slide.placeholders[1]
+    # title.text = result["title"]
+    # subtitle.text = "Subtitle"
+
+    if "child" in result:
+        slide = prs.slides[0]
+        title = slide.shapes.title
+        title.text = result["title"]
 
     response = HttpResponse(content_type='application/vnd.ms-powerpoint')
     response['Content-Disposition'] = 'attachment; filename="sample.pptx"'
