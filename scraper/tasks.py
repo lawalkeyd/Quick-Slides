@@ -13,22 +13,34 @@ class Scrape_Site:
     parent = {}
     booktitle = ''
 
-    def __init__(self, request):
-        self.site_url = request.data.get('site_url')
+    def __init__(self, request, site_url):
+
+        self.site_url = site_url
+        print(self.site_url)
         print('Scraping Site ..')
-        req = Request(self.site_url, headers=request.headers.__dict__)
+        req = Request(self.site_url)
         html = urlopen(req).read()
         bs = BeautifulSoup(html, 'html.parser')
         self.booktitle = bs.find('title').text
         self.create_powerpoint()
-        self.find_info(bs, 1, self.parent)
+        self.find_info(bs, 1)
+        self.slide.save(BASE_DIR  / 'slides_folder' / '{}.pptx'.format('finished_titlr.pptx'))
+
 
     def create_powerpoint(self):
         present_dir = BASE_DIR  / 'slides_folder' 
         prs = Presentation(present_dir / 'Ion.pptx')
         self.slide = prs
 
-    def find_info(bs, no):
+    def add_section(self, text):
+        prs = self.slide
+        layout = prs.slide_layouts[1]
+        slide = prs.slides.add_slide(layout)
+        title = slide.shapes.title
+        title.text = text
+
+
+    def find_info(self, bs, no):
         tag = "tag"
         child = "child"
         text = "text"
@@ -36,14 +48,14 @@ class Scrape_Site:
         for head in heads:
             heading_headers = head.parent.find_all('h' + str(no+1))
             if heading_headers != None and (no <= 6):
-                    self.create_section(head.text)
+                    self.add_section(head.text)
                     self.find_info(head.parent, no + 1)
             else:
                 paragraph = head.parent.find_all('p')
                 if paragraph:
                     self.create_slide(head.text, paragraph[0].get_text)
-                    parent[text] = paragraph[0].get_text
-        return parent        
+
+        return        
 
              
 
@@ -80,6 +92,5 @@ def web_scrape(url):
     # sleep few seconds to avoid database block
     sleep(5)
 
-web_scrape('https://en.wikipedia.org/wiki/Adolf_Hitler')
        
 
