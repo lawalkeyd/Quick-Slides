@@ -12,6 +12,9 @@ class Scrape_Site:
     filename  = slide = site_url = None
     parent = {}
     booktitle = ''
+    master_slide = 0
+    title_layout = 0
+    title_content_layout = 1
 
     def __init__(self, request, site_url):
 
@@ -29,15 +32,32 @@ class Scrape_Site:
 
     def create_powerpoint(self):
         present_dir = BASE_DIR  / 'slides_folder' 
-        prs = Presentation(present_dir / 'Ion.pptx')
+        prs = Presentation(present_dir / 'Template1.pptx')
         self.slide = prs
 
     def add_section(self, text):
         prs = self.slide
-        layout = prs.slide_layouts[1]
-        slide = prs.slides.add_slide(layout)
-        title = slide.shapes.title
+        
+        slide_layout = prs.slide_masters[self.master_slide].slide_layouts[self.title_layout]
+        slide = prs.slides.add_slide(slide_layout)
+
+        title = slide.placeholders[0]
         title.text = text
+
+    def add_slide(self, title, text):
+        prs = self.slide
+        slide_layout = prs.slide_masters[self.master_slide].slide_layouts[self.title_content_layout]    
+        slide = prs.add_slide(slide_layout)
+
+        for shape in slide.placeholders:
+            print('Index: %d Name: %s Type: %s' % (shape.placeholder_format.idx, shape.name, shape.placeholder_format.type))
+
+        title = slide.placeholders[1]
+        title.text = title
+
+        paragraph = slide.placeholders[2]
+        paragraph.text = text
+
 
 
     def find_info(self, bs, no):
@@ -45,16 +65,20 @@ class Scrape_Site:
         child = "child"
         text = "text"
         heads = bs.find_all('h' + str(no))
+        no += 1
         for head in heads:
-            heading_headers = head.parent.find_all('h' + str(no+1))
+            heading_headers = head.parent.find_all('h' + str(no))
             if heading_headers != None and (no <= 6):
                     self.add_section(head.text)
                     self.find_info(head.parent, no + 1)
+            elif head.parent == bs:
+                paragraph = head.next_element.find_all('p')
+                if paragraph:
+                    self.add_slide(head.text, paragraph[0].get_text)
             else:
                 paragraph = head.parent.find_all('p')
                 if paragraph:
-                    self.create_slide(head.text, paragraph[0].get_text)
-
+                    self.add_slide(head.text, paragraph[0].get_text)        
         return        
 
              
