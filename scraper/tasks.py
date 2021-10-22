@@ -47,15 +47,16 @@ class Scrape_Site:
     def add_slide(self, title, text):
         prs = self.slide
         slide_layout = prs.slide_masters[self.master_slide].slide_layouts[self.title_content_layout]    
-        slide = prs.add_slide(slide_layout)
+        slide = prs.slides.add_slide(slide_layout)
 
         for shape in slide.placeholders:
             print('Index: %d Name: %s Type: %s' % (shape.placeholder_format.idx, shape.name, shape.placeholder_format.type))
 
-        title = slide.placeholders[1]
-        title.text = title
+        title_placeholder = slide.placeholders[0]
+        title_placeholder.text = title
 
-        paragraph = slide.placeholders[2]
+        paragraph = slide.placeholders[1]
+        print(text + ' testing text')
         paragraph.text = text
 
 
@@ -65,20 +66,24 @@ class Scrape_Site:
         child = "child"
         text = "text"
         heads = bs.find_all('h' + str(no))
-        no += 1
         for head in heads:
+            print('bla bla')
             heading_headers = head.parent.find_all('h' + str(no))
             if heading_headers != None and (no <= 6):
+                    no += 1
                     self.add_section(head.text)
-                    self.find_info(head.parent, no + 1)
+                    self.find_info(head.parent, no)
+
             elif head.parent == bs:
                 paragraph = head.next_element.find_all('p')
                 if paragraph:
+                    print('Slide is added')
                     self.add_slide(head.text, paragraph[0].get_text)
             else:
                 paragraph = head.parent.find_all('p')
+                print('Paragraph is added')
                 if paragraph:
-                    self.add_slide(head.text, paragraph[0].get_text)        
+                    self.add_slide(head.text, paragraph[0].get_text())        
         return        
 
              
