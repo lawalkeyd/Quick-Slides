@@ -7,6 +7,8 @@ from pptx import Presentation
 from django.http import HttpResponse
 from QuickSlides.settings import BASE_DIR
 
+import os
+
 
 class Scrape_Site:
     filename  = slide = site_url = None
@@ -19,15 +21,18 @@ class Scrape_Site:
     def __init__(self, request, site_url):
 
         self.site_url = site_url
-        print(self.site_url)
-        print('Scraping Site ..')
+        filename = 'slide.log'
+        self.log = open(os.path.join(os.path.dirname(__file__),filename),'w')        
+        self.log.write(self.site_url)
+        self.log.write('Scraping Site ..')
         req = Request(self.site_url)
         html = urlopen(req).read()
         bs = BeautifulSoup(html, 'html.parser')
         self.booktitle = bs.find('title').text
         self.create_powerpoint()
         self.find_info(bs, 1)
-        self.slide.save(BASE_DIR  / 'slides_folder' / '{}.pptx'.format('finished_titlr.pptx'))
+        self.slide.save(BASE_DIR  / 'slides_folder' / '{}.pptx'.format(self.booktitle))
+        self.log.close
 
 
     def create_powerpoint(self):
@@ -36,6 +41,7 @@ class Scrape_Site:
         self.slide = prs
 
     def add_section(self, text):
+        self.log.write('starting section adding')
         prs = self.slide
         
         slide_layout = prs.slide_masters[self.master_slide].slide_layouts[self.title_layout]
@@ -45,18 +51,19 @@ class Scrape_Site:
         title.text = text
 
     def add_slide(self, title, text):
+        self.log.write('starting slide adding')
         prs = self.slide
         slide_layout = prs.slide_masters[self.master_slide].slide_layouts[self.title_content_layout]    
         slide = prs.slides.add_slide(slide_layout)
 
         for shape in slide.placeholders:
-            print('Index: %d Name: %s Type: %s' % (shape.placeholder_format.idx, shape.name, shape.placeholder_format.type))
+            self.log.write('Index: %d Name: %s Type: %s\n' % (shape.placeholder_format.idx, shape.name, shape.placeholder_format.type))
 
         title_placeholder = slide.placeholders[0]
         title_placeholder.text = title
 
         paragraph = slide.placeholders[1]
-        print(text + ' testing text')
+        self.log.write(text + ' testing text')
         paragraph.text = text
 
 
@@ -66,22 +73,28 @@ class Scrape_Site:
         child = "child"
         text = "text"
         heads = bs.find_all('h' + str(no))
+        self.log.write('there are {} headings\n'.format([i.text[1:-1] for i in heads]))
         for head in heads:
-            print('bla bla')
+            self.log.write('heading {} found\n'.format(no))
             heading_headers = head.parent.find_all('h' + str(no))
             if heading_headers != None and (no <= 6):
                     no += 1
+                    self.log.write('adding section {}'.format(head.text))
                     self.add_section(head.text)
                     self.find_info(head.parent, no)
+            elif no <= 6:
+                no += 1
+                self.log.write('going through this again')
+                self.find_info(head.parent, no)        
 
             elif head.parent == bs:
                 paragraph = head.next_element.find_all('p')
                 if paragraph:
-                    print('Slide is added')
+                    self.log.write('Slide is added')
                     self.add_slide(head.text, paragraph[0].get_text)
             else:
                 paragraph = head.parent.find_all('p')
-                print('Paragraph is added')
+                self.log.write('Paragraph is added')
                 if paragraph:
                     self.add_slide(head.text, paragraph[0].get_text())        
         return        
