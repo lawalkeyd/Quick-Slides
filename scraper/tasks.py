@@ -73,21 +73,22 @@ class Scrape_Site:
         child = "child"
         text = "text"
         heads = bs.find_all('h' + str(no))
-        self.log.write('there are {} headings\n'.format([i.text[1:-1] for i in heads]))
+        self.log.write('there are {} headings\n'.format([i.text[0:] for i in heads]))
         for head in heads:
             self.log.write('heading {} found\n'.format(no))
             heading_headers = head.parent.find_all('h' + str(no))
-            if heading_headers != None and (no <= 6):
-                    no += 1
-                    self.log.write('adding section {}'.format(head.text))
-                    self.add_section(head.text)
-                    self.find_info(head.parent, no)
-            elif no <= 6:
+            if heading_headers != None and (no <= 5):
                 no += 1
-                self.log.write('going through this again')
+                self.log.write('adding section {}\n'.format(head.text))
+                self.add_section(head.text)
+                self.find_info(head.parent, no)
+            elif no <= 5:
+                no += 1
+                self.log.write('going through this again\n')
                 self.find_info(head.parent, no)        
 
             elif head.parent == bs:
+                self.log.write('Writing paragraphs \n')
                 paragraph = head.next_element.find_all('p')
                 if paragraph:
                     self.log.write('Slide is added')
